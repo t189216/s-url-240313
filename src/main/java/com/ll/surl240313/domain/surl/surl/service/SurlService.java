@@ -1,5 +1,6 @@
 package com.ll.surl240313.domain.surl.surl.service;
 
+import com.ll.surl240313.domain.member.member.entity.Member;
 import com.ll.surl240313.domain.surl.surl.entity.Surl;
 import com.ll.surl240313.domain.surl.surl.repository.SurlRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,8 +20,9 @@ public class SurlService {
     }
 
     @Transactional
-    public Surl create(String url, String title) {
+    public Surl create(Member author, String url, String title) {
         Surl surl = Surl.builder()
+                .author(author)
                 .url(url)
                 .title(title)
                 .build();

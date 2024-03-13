@@ -1,5 +1,6 @@
 package com.ll.surl240313.global.initData;
 
+import com.ll.surl240313.domain.member.member.entity.Member;
 import com.ll.surl240313.domain.member.member.service.MemberService;
 import com.ll.surl240313.domain.surl.surl.service.SurlService;
 import lombok.RequiredArgsConstructor;
@@ -32,11 +33,15 @@ public class NotProd {
 
     @Transactional
     public void work1() {
-        memberService.create("system", "1234", "system");
-        memberService.create("admin", "1234", "admin");
-        memberService.create("garage", "1234", "garage");
+        Member memberSystem = memberService.create("system", "1234", "system");
+        Member memberAdmin = memberService.create("admin", "1234", "admin");
+        Member memberGarage = memberService.create("garage", "1234", "garage");
+        Member memberUser1 = memberService.create("user1", "1234", "user1");
+        Member memberUser2 = memberService.create("user2", "1234", "user2");
+        Member memberUser3 = memberService.create("user3", "1234", "user3");
 
-        surlService.create("https://www.naver.com", "네이버");
-        surlService.create("https://www.google.com", "구글");
+        surlService.create(memberUser1, "https://www.naver.com", "네이버");
+        surlService.create(memberUser1, "https://www.google.com", "구글");
+        surlService.create(memberUser3, "https://www.daum.net", "다음");
     }
 }
