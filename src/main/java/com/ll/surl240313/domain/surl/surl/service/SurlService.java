@@ -6,6 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -26,5 +28,9 @@ public class SurlService {
         surlRepository.save(surl);
 
         return surl;
+    }
+
+    public Optional<Surl> findById(long id) {
+        return surlRepository.findById(id);
     }
 }
