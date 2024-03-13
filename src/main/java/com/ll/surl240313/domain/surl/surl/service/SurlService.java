@@ -19,7 +19,7 @@ public class SurlService {
     }
 
     @Transactional
-    public Surl save(String url, String title) {
+    public Surl create(String url, String title) {
         Surl surl = Surl.builder()
                 .url(url)
                 .title(title)

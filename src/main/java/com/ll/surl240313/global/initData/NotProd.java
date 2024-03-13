@@ -30,7 +30,7 @@ public class NotProd {
 
     @Transactional
     public void work1() {
-        surlService.save("https://www.naver.com", "네이버");
-        surlService.save("https://www.google.com", "구글");
+        surlService.create("https://www.naver.com", "네이버");
+        surlService.create("https://www.google.com", "구글");
     }
 }
