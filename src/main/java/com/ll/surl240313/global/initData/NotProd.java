@@ -1,5 +1,6 @@
 package com.ll.surl240313.global.initData;
 
+import com.ll.surl240313.domain.member.member.service.MemberService;
 import com.ll.surl240313.domain.surl.surl.service.SurlService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +19,7 @@ public class NotProd {
     @Lazy
     private NotProd self;
     private final SurlService surlService;
+    private final MemberService memberService;
 
     @Bean
     public ApplicationRunner initNotProd() {
@@ -30,6 +32,10 @@ public class NotProd {
 
     @Transactional
     public void work1() {
+        memberService.create("system", "1234", "system");
+        memberService.create("admin", "1234", "admin");
+        memberService.create("garage", "1234", "garage");
+
         surlService.create("https://www.naver.com", "네이버");
         surlService.create("https://www.google.com", "구글");
     }
