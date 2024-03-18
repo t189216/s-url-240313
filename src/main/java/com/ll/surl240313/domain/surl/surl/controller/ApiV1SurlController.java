@@ -9,10 +9,9 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.security.Principal;
 
 @RestController
 @RequestMapping("api/v1/surls")
@@ -30,13 +29,15 @@ public class ApiV1SurlController {
     }
 
     @PostMapping("")
+    @PreAuthorize("isAuthenticated()")
     public void create(
             @Valid @RequestBody SurlCreateReqBody reqBody,
-            Principal principal
+            @AuthenticationPrincipal SecurityUser user
     ) {
-        SecurityUser user = principal == null ? null :  (SecurityUser) ((Authentication) principal).getPrincipal();
-        log.debug("principal: {}", principal);
-        Member author = memberService.findById(4L).get();
+        Member authorMember = memberService.findById(user.getId()).get();
+
+        log.debug("user: {}", user);
+        Member author = authorMember;
         surlService.create(author, reqBody.url, reqBody.title);
     }
 
