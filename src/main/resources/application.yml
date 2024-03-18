@@ -43,3 +43,7 @@ custom:
     cookieDomain: "${custom.dev.cookieDomain}"
     frontUrl: "${custom.dev.frontUrl}"
     backUrl: "${custom.dev.backUrl}"
+  temp:
+    dirPath: c:/temp/surl_dev/temp
+  genFile:
+    dirPath: c:/temp/surl_dev
