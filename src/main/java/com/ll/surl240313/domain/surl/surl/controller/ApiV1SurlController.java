@@ -1,16 +1,14 @@
 package com.ll.surl240313.domain.surl.surl.controller;
 
-import com.ll.surl240313.domain.member.member.entity.Member;
-import com.ll.surl240313.domain.member.member.service.MemberService;
 import com.ll.surl240313.domain.surl.surl.service.SurlService;
-import com.ll.surl240313.global.security.SecurityUser;
+import com.ll.surl240313.global.rq.Rq;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -19,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 public class ApiV1SurlController {
     private final SurlService surlService;
-    private final MemberService memberService;
+    private final Rq rq;
 
     @Data
     public static class SurlCreateReqBody {
@@ -30,15 +28,11 @@ public class ApiV1SurlController {
 
     @PostMapping("")
     @PreAuthorize("isAuthenticated()")
+    @Transactional
     public void create(
-            @Valid @RequestBody SurlCreateReqBody reqBody,
-            @AuthenticationPrincipal SecurityUser user
+            @Valid @RequestBody SurlCreateReqBody reqBody
     ) {
-        Member authorMember = memberService.findById(user.getId()).get();
-
-        log.debug("user: {}", user);
-        Member author = authorMember;
-        surlService.create(author, reqBody.url, reqBody.title);
+        surlService.create(rq.getMember(), reqBody.url, reqBody.title);
     }
 
     @Data
