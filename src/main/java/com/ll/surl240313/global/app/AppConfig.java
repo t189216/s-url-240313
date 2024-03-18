@@ -11,7 +11,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
 public class AppConfig {
-
     @Getter
     public static ObjectMapper objectMapper;
 
@@ -55,6 +54,14 @@ public class AppConfig {
     @Value("${custom.site.frontUrl}")
     public void setSiteFrontUrl(String siteFrontUrl) {
         this.siteFrontUrl = siteFrontUrl;
+    }
+
+    @Getter
+    private static String siteBackUrl;
+
+    @Value("${custom.site.backUrl}")
+    public void setSiteBackUrl(String siteBackUrl) {
+        this.siteBackUrl = siteBackUrl;
     }
 
     @Getter

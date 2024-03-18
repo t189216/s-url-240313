@@ -1,7 +1,10 @@
 package com.ll.surl240313.domain.surl.surl.controller;
 
+import com.ll.surl240313.domain.surl.surl.entity.Surl;
 import com.ll.surl240313.domain.surl.surl.service.SurlService;
 import com.ll.surl240313.global.rq.Rq;
+import com.ll.surl240313.global.rsData.RsData;
+
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
@@ -12,27 +15,28 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("api/v1/surls")
+@RequestMapping("/api/v1/surls")
 @RequiredArgsConstructor
 @Slf4j
 public class ApiV1SurlController {
     private final SurlService surlService;
     private final Rq rq;
 
-    @Data
-    public static class SurlCreateReqBody {
-        @NotBlank
-        public String url;
-        public String title;
+    public record SurlCreateReqBody(@NotBlank String url, String title) {
+    }
+
+    public record SurlCreateRespBody(String shortUrl) {
     }
 
     @PostMapping("")
     @PreAuthorize("isAuthenticated()")
     @Transactional
-    public void create(
+    public RsData<SurlCreateRespBody> create(
             @Valid @RequestBody SurlCreateReqBody reqBody
     ) {
-        surlService.create(rq.getMember(), reqBody.url, reqBody.title);
+        Surl surl = surlService.create(rq.getMember(), reqBody.url, reqBody.title);
+
+        return RsData.of(new SurlCreateRespBody(surl.getShortUrl()));
     }
 
     @Data
