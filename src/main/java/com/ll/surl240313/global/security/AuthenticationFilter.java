@@ -1,21 +1,25 @@
 package com.ll.surl240313.global.security;
 
-import com.ll.surl240313.standard.util.Ut.Ut;
+import com.ll.surl240313.domain.member.member.service.MemberService;
+import com.ll.surl240313.global.rq.Rq;
+import com.ll.surl240313.global.rsData.RsData;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 @Component
+@RequiredArgsConstructor
 public class AuthenticationFilter extends OncePerRequestFilter {
+    private final MemberService memberService;
+    private final Rq rq;
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         if (!request.getRequestURI().startsWith("/api/")) {
@@ -28,26 +32,50 @@ public class AuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        String authorization = request.getHeader("Authorization");
-        authorization = authorization.substring("Bearer".length()).trim();
-        String jsonStr = Ut.base64Decode(authorization);
-        Map map = Ut.json.toObj(jsonStr, Map.class);
+        String bearerToken = rq.getHeader("Authorization", null);
 
-        long securityUserId = (long) ((int) map.get("id"));
-        String securityUserUsername = (String) map.get("username");
-        List<String> securityUserAuthorities = (List<String>) map.get("authorities");
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            // 토큰이 헤더로 들어온 경우
+            String tokensStr = bearerToken.substring("Bearer ".length());
+            String[] tokens = tokensStr.split(" ", 2);
+            String refreshToken = tokens[0];
+            String accessToken = tokens.length == 2 ? tokens[1] : "";
 
-        SecurityUser securityUser = new SecurityUser(
-                securityUserId,
-                securityUserUsername,
-                "",
-                securityUserAuthorities
-                        .stream()
-                        .map(authority -> new SimpleGrantedAuthority(authority))
-                        .toList()
-        );
+            // 엑세스 토큰이 존재하면
+            if (!accessToken.isBlank()) {
+                // 유효성 체크하여 만료되었으면 리프레시 토큰으로 새로운 엑세스 토큰을 발급받고 응답헤더에 추가
+                if (!memberService.validateToken(accessToken)) {
+                    RsData<String> rs = memberService.refreshAccessToken(refreshToken);
+                    accessToken = rs.getData();
+                    rq.setHeader("Authorization", "Bearer " + refreshToken + " " + accessToken);
+                }
 
-        SecurityContextHolder.getContext().setAuthentication(securityUser.genAuthentication());
+                SecurityUser securityUser = memberService.getUserFromAccessToken(accessToken);
+                // 세션에 로그인하는 것이 아닌 1회성(이번 요청/응답 생명주기에서만 인정됨)으로 로그인 처리
+                // API 요청은, 로그인이 필요하다면 이렇게 매번 요청마다 로그인 처리가 되어야 하는게 맞다.
+                rq.setLogin(securityUser);
+            }
+        } else {
+            // 토큰이 쿠키로 들어온 경우
+            String accessToken = rq.getCookieValue("accessToken", "");
+
+            // 엑세스 토큰이 존재하면
+            if (!accessToken.isBlank()) {
+                // 유효성 체크하여 만료되었으면 리프레시 토큰으로 새로운 엑세스 토큰을 발급받고 응답쿠키에 추가
+                if (!memberService.validateToken(accessToken)) {
+                    String refreshToken = rq.getCookieValue("refreshToken", "");
+
+                    RsData<String> rs = memberService.refreshAccessToken(refreshToken);
+                    accessToken = rs.getData();
+                    rq.setCrossDomainCookie("accessToken", accessToken);
+                }
+
+                SecurityUser securityUser = memberService.getUserFromAccessToken(accessToken);
+                // 세션에 로그인하는 것이 아닌 1회성(이번 요청/응답 생명주기에서만 인정됨)으로 로그인 처리
+                // API 요청은, 로그인이 필요하다면 이렇게 매번 요청마다 로그인 처리가 되어야 하는게 맞다.
+                rq.setLogin(securityUser);
+            }
+        }
 
         filterChain.doFilter(request, response);
     }
